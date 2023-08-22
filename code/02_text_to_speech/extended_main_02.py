@@ -24,10 +24,10 @@ class VoiceAssistant():
 
 if __name__ == '__main__':
 
-	# Für Windows nutzen wir spawn, nicht fork
+	# Für Windows & macOS nutzen wir spawn, nicht fork
 	# Siehe: https://docs.python.org/3/library/multiprocessing.html
 	multiprocessing.set_start_method('spawn')
 
 	va = VoiceAssistant()
-	logger.info("Anwendung wurde gestartet")
+	logger.info("Anwendung TTS wurde gestartet")
 	va.run()

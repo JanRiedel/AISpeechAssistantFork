@@ -5,6 +5,8 @@ import multiprocessing
 def __speak__(text, voiceId):
 	engine = pyttsx3.init()
 	engine.setProperty('voice', voiceId)
+	engine.setProperty('rate', 175)
+	engine.setProperty('pitch', 0.8)
 	engine.say(text)
 	engine.runAndWait()
 		
@@ -12,7 +14,7 @@ class Voice:
 
 	def __init__(self):
 		self.process = None
-		self.voiceId = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_DE-DE_HEDDA_11.0"
+		self.voiceId = "com.apple.voice.compact.de-DE.Anna"
 		
 	def say(self, text):
 		if self.process:

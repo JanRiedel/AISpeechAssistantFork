@@ -33,7 +33,7 @@ class Voice:
 		voices = engine.getProperty('voices')
 		
 		# Wir hängen ein "-" an die Sprache in Großschrift an, damit sie in der ID gefunden wird
-		lang_search_str = language.upper()+"-"
+		lang_search_str = language.lower()+"-"+language.upper()
 		
 		for voice in voices:
 			# Die ID einer Sprache ist beispielsweise:

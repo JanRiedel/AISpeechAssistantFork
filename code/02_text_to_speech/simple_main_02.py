@@ -22,7 +22,8 @@ class VoiceAssistant():
 			logger.info(voice)
 			
 		# Wählt bitte eine der ausgegebenen IDs und setzt die voiceId entsprechend
-		voiceId = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_DE-DE_HEDDA_11.0"
+		voiceId = "com.apple.voice.compact.de-DE.Anna"
+		#voiceId = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_DE-DE_HEDDA_11.0"
 		self.tts.setProperty('voice', voiceId)
 		self.tts.say("Initialisierung abgeschlossen");
 		self.tts.runAndWait();
