@@ -4,7 +4,7 @@ import time
 import sys
 
 import pvporcupine
-import pyaudio
+from pvrecorder import PvRecorder
 import struct
 import os
 
@@ -43,36 +43,34 @@ class VoiceAssistant():
 		
 		# Lies alle wake words aus der Konfigurationsdatei
 		self.wake_words = self.cfg['assistant']['wakewords']
-		
+
+		# Lese pvporcupine Access Key
+		authkey = self.cfg['keys']['porcupine']
+		logger.debug("Porcupine Access Key lautet {}", authkey)
+
 		# Wird keins gefunden, nimm 'bumblebee'
 		if not self.wake_words:
 			self.wake_words = ['bumblebee']
 		logger.debug("Wake Words sind {}", ','.join(self.wake_words))
-		self.porcupine = pvporcupine.create(keywords=self.wake_words)
+		self.porcupine = pvporcupine.create(access_key=authkey, keywords=self.wake_words)
 		# Sensitivities (sensitivities=[0.6, 0.35]) erweitert oder schränkt
 		# den Spielraum bei der Intepretation der Wake Words ein
 		logger.debug("Wake Word Erkennung wurde initialisiert.")
-		
-		# Initialisiere Audio stream
-		logger.debug("Initialisiere Audioeingabe...")
-		self.pa = pyaudio.PyAudio()
-		
-		# Liste alle Audio Devices auf
-		for i in range(self.pa.get_device_count()):
-			logger.debug('id: {}, name: {}', self.pa.get_device_info_by_index(i).get('index'),
-				self.pa.get_device_info_by_index(i).get('name'))
-		
-		# Wir öffnen einen (mono) Audio-Stream, der Audiodaten einer bestimmten Länge
-		# von einem bestimmten Device einliest.
-		self.audio_stream = self.pa.open(
-			rate=self.porcupine.sample_rate,
-			channels=1,
-			format=pyaudio.paInt16,
-			input=True,
-			frames_per_buffer=self.porcupine.frame_length,
-			input_device_index=0)
-		logger.debug("Audiostream geöffnet.")
 
+		# Initialisiere Recorder/Audio Stream
+		logger.debug("Initialisiere Audioeingabe...")
+		self.recorder = PvRecorder(
+			frame_length=self.porcupine.frame_length,
+			device_index=1)
+		# Liste alle Audio Devices auf
+		devices = self.recorder.get_available_devices()
+		for i in range(len(devices)):
+			logger.debug('index: %d, device name: %s' % (i, devices[i]))
+
+		self.recorder.start()
+		logger.debug("PVRecorder Version: {}", self.recorder.version)
+		logger.debug("Audiostream geöffnet: {}", self.recorder.selected_device)
+		
 		# Initialisiere TTS
 		logger.info("Initialisiere Sprachausgabe...")
 		self.tts = Voice()
@@ -89,12 +87,11 @@ class VoiceAssistant():
 		# Versuche folgenden Code auszuführen. Sollte eine Ausnahme auftreten, wird der except Block behandelt.
 		try:
 			while True:
-			
-				pcm = self.audio_stream.read(self.porcupine.frame_length)
-				pcm_unpacked = struct.unpack_from("h" * self.porcupine.frame_length, pcm)		
-				keyword_index = self.porcupine.process(pcm_unpacked)
-				if keyword_index >= 0:
-					logger.info("Wake Word {} wurde verstanden.", self.wake_words[keyword_index])
+				pcm = self.recorder.read()
+				result = self.porcupine.process(pcm)
+
+				if result >= 0:
+					logger.info("Wake Word {} wurde verstanden.", self.wake_words[result])
 					
 		# Der Except Block ist hier in seiner Behandlung eingeschränkt auf den Typ KeyboardInterrupt,
 		# also falls der Benutzer die Ausführung des Programms mit STRG+C unterbricht.
@@ -107,11 +104,8 @@ class VoiceAssistant():
 			if self.porcupine:
 				self.porcupine.delete()
 				
-			if self.audio_stream is not None:
-				self.audio_stream.close()
-				
-			if self.pa is not None:
-				self.pa.terminate()
+			if self.recorder is not None:
+				self.recorder.delete()
 
 if __name__ == '__main__':
 	multiprocessing.set_start_method('spawn')

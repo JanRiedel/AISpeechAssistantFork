@@ -1,3 +1,6 @@
 assistant:
     language: "de"
     wakewords: ["bumblebee", "terminator"]
+
+keys:
+    porcupine: "a8lCT0sHCVM/OfP2IUwxGyTTktK3q0Rm7r2CwIVNJ4H+6Mwimk4AKQ=="
